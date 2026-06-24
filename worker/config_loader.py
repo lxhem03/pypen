@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -86,23 +87,26 @@ def _normalize_dnf_packages(raw: Any) -> list[str]:
     return out
 
 def load_defaults(file_path: str) -> dict[str, Any]:
+    fallback = {"dnf_packages": [], "ping": True, "ping_url": "", "access_token": _global_token_from_env() or ""}
     path = Path(file_path)
     if not path.exists():
-        return {"dnf_packages": [], "ping": True, "ping_url": ""}
+        return fallback
     try:
         with path.open("rb") as fh:
             raw = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
         logger.error(f"load_defaults: TOML parse error in {file_path}: {exc}")
-        return {"dnf_packages": [], "ping": True, "ping_url": ""}
+        return fallback
     defaults = raw.get("defaults") or {}
     if not isinstance(defaults, dict):
-        return {"dnf_packages": [], "ping": True, "ping_url": ""}
+        return fallback
     ping_raw = defaults.get("ping", True)
+    toml_token = (defaults.get("access_token") or "").strip()
     return {
         "dnf_packages": _normalize_dnf_packages(defaults.get("dnf_packages")),
         "ping": _coerce_bool(ping_raw) if ping_raw not in (None, "") else True,
         "ping_url": str(defaults.get("ping_url") or "").strip(),
+        "access_token": toml_token or _global_token_from_env() or "",
     }
 
 def _normalize_cron(raw: dict[str, Any] | None) -> dict[str, Any]:
@@ -123,6 +127,24 @@ def _normalize_repo_kind(raw: Any) -> str:
     return "public"
 
 _TOKEN_URL_RE = re.compile(r"^(https?://)(?:[^@/]+@)?(.+)$", re.IGNORECASE)
+
+_ENV_SLUG_RE = re.compile(r"[^A-Z0-9]+")
+
+def _env_slug(raw_id: str) -> str:
+    return _ENV_SLUG_RE.sub("_", raw_id.strip().upper()).strip("_")
+
+def _project_token_from_env(raw_id: str) -> str | None:
+    """ACCESS_TOKEN_<RAW_ID> — per-project override, e.g. ACCESS_TOKEN_ZOROBOT."""
+    slug = _env_slug(raw_id)
+    if not slug:
+        return None
+    value = os.environ.get(f"ACCESS_TOKEN_{slug}")
+    return value.strip() if value and value.strip() else None
+
+def _global_token_from_env() -> str | None:
+    """ACCESS_TOKEN — fallback used for all private projects with no other token set."""
+    value = os.environ.get("ACCESS_TOKEN")
+    return value.strip() if value and value.strip() else None
 
 def inject_access_token(git_url: str, token: str | None) -> str:
     if not token:
@@ -176,7 +198,7 @@ def load_config(file_path: str) -> list[dict[str, Any]]:
 
     defaults = raw.get("defaults", {}) or {}
     default_python = defaults.get("python_version") or None
-    default_token = (defaults.get("access_token") or "").strip() or None
+    default_token = (defaults.get("access_token") or "").strip() or _global_token_from_env()
 
     projects_raw = raw.get("project", []) or []
     if not isinstance(projects_raw, list):
@@ -197,12 +219,19 @@ def load_config(file_path: str) -> list[dict[str, Any]]:
         python_version = project_python or default_python
 
         repo_kind = _normalize_repo_kind(entry.get("repo"))
-        project_token = (str(entry.get("access_token") or "")).strip() or None
-        access_token = project_token or default_token if repo_kind == "private" else None
+        toml_project_token = (str(entry.get("access_token") or "")).strip() or None
+        access_token = None
+        if repo_kind == "private":
+            access_token = (
+                toml_project_token
+                or _project_token_from_env(raw_id)
+                or default_token
+            )
         if repo_kind == "private" and not access_token:
             logger.warning(
                 f"Project {raw_id} is marked repo=\"private\" but no "
-                f"access_token is set (project or [defaults]). Clones may fail."
+                f"access_token is set (project, [defaults], ACCESS_TOKEN_{_env_slug(raw_id)}, "
+                f"or ACCESS_TOKEN). Clones may fail."
             )
 
         git_url = str(entry.get("git_url", "")).strip()
