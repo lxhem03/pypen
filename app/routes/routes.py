@@ -714,6 +714,8 @@ async def clear_failure(process_name):
     return jsonify({"status": "success", "message": f"Cleared failure state for {process_name}"})
 
 def _find_project_config(process_name: str) -> dict | None:
+    from worker.config_loader import _global_token_from_env, _project_token_from_env
+
     try:
         with CONFIG_FILE.open("rb") as fh:
             raw = tomllib.load(fh)
@@ -723,7 +725,7 @@ def _find_project_config(process_name: str) -> dict | None:
     defaults = raw.get("defaults") or {}
     if not isinstance(projects, list):
         return None
-    default_token = (str(defaults.get("access_token") or "")).strip() or None
+    default_token = (str(defaults.get("access_token") or "")).strip() or _global_token_from_env()
     for entry in projects:
         if not isinstance(entry, dict):
             continue
@@ -738,10 +740,14 @@ def _find_project_config(process_name: str) -> dict | None:
 
             repo_raw = str(entry.get("repo") or "").strip().lower()
             repo_kind = "private" if repo_raw in ("private", "priv") else "public"
-            project_token = (str(entry.get("access_token") or "")).strip() or None
-            access_token = (
-                project_token or default_token if repo_kind == "private" else None
-            )
+            toml_project_token = (str(entry.get("access_token") or "")).strip() or None
+            access_token = None
+            if repo_kind == "private":
+                access_token = (
+                    toml_project_token
+                    or _project_token_from_env(raw_id)
+                    or default_token
+                )
             merged["repo"] = repo_kind
             merged["access_token"] = access_token
             if repo_kind == "private" and not access_token:
