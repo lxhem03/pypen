@@ -33,7 +33,7 @@ dnf_packages = ["ffmpeg", "aria2"]
 # Default GitHub/GitLab access token used to clone projects whose
 # `repo = "private"`. Each project may override with its own `access_token`.
 # Leave empty ("") if you only deploy public repos.
-access_token = ""
+access_token = "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"
 
 # Login credentials for the web dashboard (served by the Quart app).
 # If either is empty, the dashboard will refuse to log in.
