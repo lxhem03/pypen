@@ -741,13 +741,11 @@ def _find_project_config(process_name: str) -> dict | None:
             repo_raw = str(entry.get("repo") or "").strip().lower()
             repo_kind = "private" if repo_raw in ("private", "priv") else "public"
             toml_project_token = (str(entry.get("access_token") or "")).strip() or None
-            access_token = None
-            if repo_kind == "private":
-                access_token = (
-                    toml_project_token
-                    or _project_token_from_env(raw_id)
-                    or default_token
-                )
+            access_token = (
+                toml_project_token
+                or _project_token_from_env(raw_id)
+                or default_token
+            )
             merged["repo"] = repo_kind
             merged["access_token"] = access_token
             if repo_kind == "private" and not access_token:
