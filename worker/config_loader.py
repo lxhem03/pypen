@@ -220,13 +220,11 @@ def load_config(file_path: str) -> list[dict[str, Any]]:
 
         repo_kind = _normalize_repo_kind(entry.get("repo"))
         toml_project_token = (str(entry.get("access_token") or "")).strip() or None
-        access_token = None
-        if repo_kind == "private":
-            access_token = (
-                toml_project_token
-                or _project_token_from_env(raw_id)
-                or default_token
-            )
+        access_token = (
+            toml_project_token
+            or _project_token_from_env(raw_id)
+            or default_token
+        )
         if repo_kind == "private" and not access_token:
             logger.warning(
                 f"Project {raw_id} is marked repo=\"private\" but no "
