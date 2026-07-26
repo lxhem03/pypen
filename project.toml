@@ -76,31 +76,20 @@ branch = "main"
 # Unique id for this worker. Used to namespace s6 service names and log files.
 # Must be unique across all [[project]] entries.
 id          = "worker01"
-
-# HTTPS clone URL of the repository.
 git_url     = "https://github.com/lxhem03/Eren-v2"
-
-# Branch (or tag/commit) to check out after cloning.
 branch      = "OAG"
-
-# "public" (default) or "private". When "private", the access_token below —
-# or [defaults].access_token — is injected into the clone URL as
-# `x-access-token:<token>@` basic-auth credentials.
 repo        = "private"
 
-# Entry point inside the cloned repo. Either a module/file (e.g. "bot.py")
-# or a shell command. It is executed inside the project's venv.
-run_command = "main.py"
+# Override the global python_version for just this project.
+python_version = "3.12"
 
-# Per-project log rotation threshold. Accepts byte counts ("1048576") or
-# suffixed values: K/KB, M/MB, G/GB. One archive is kept; older rotations
-# are deleted so disk usage is bounded. Default: "10M".
-logs_size   = "10M"
+run_command    = "main.py"
+logs_size      = "50M"
 
 # Environment variables exported into the worker process.
 # All values are coerced to strings.
 [project.env]
-LOG_LEVEL = "info"
+PORT = "8000"
 
 # Scheduling rules for this worker. All keys are optional.
 [project.cron]
