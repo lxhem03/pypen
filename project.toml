@@ -77,7 +77,7 @@ branch = "main"
 # Must be unique across all [[project]] entries.
 id          = "worker01"
 git_url     = "https://github.com/lxhem03/Eren-v2"
-branch      = "RAG"
+branch      = "AG"
 repo        = "private"
 
 # Override the global python_version for just this project.
