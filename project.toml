@@ -77,7 +77,7 @@ branch = "main"
 # Must be unique across all [[project]] entries.
 id          = "worker01"
 git_url     = "https://github.com/lxhem03/Eren-v2"
-branch      = "OAG"
+branch      = "RAG"
 repo        = "private"
 
 # Override the global python_version for just this project.
@@ -106,8 +106,8 @@ pull_commits = "true"
 # ── Example: private repo with per-project overrides ─────────────────────────
 [[project]]
 id             = "worker02"
-git_url        = "https://github.com/lxhem03/Eren-v2"
-branch         = "AG|TNX"
+git_url        = "https://github.com/lxhem03/Links-Share-Bot"
+branch         = "main"
 repo           = "private"
 
 # Optional per-project token. If omitted, [defaults].access_token is used.
