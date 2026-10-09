@@ -76,7 +76,7 @@ branch = "main"
 # Unique id for this worker. Used to namespace s6 service names and log files.
 # Must be unique across all [[project]] entries.
 id          = "worker01"
-git_url     = "https://github.com/lxhem03/Eren-v2"
+git_url     = "https://github.com/lxhem03/Afsb"
 branch      = "OAG"
 repo        = "private"
 
