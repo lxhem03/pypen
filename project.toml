@@ -72,13 +72,15 @@ branch = "main"
 # -----------------------------------------------------------------------------
 
 # ── Example: public repo, minimal config ─────────────────────────────────────
+# ── Example: private repo with per-project overrides ─────────────────────────
 [[project]]
-# Unique id for this worker. Used to namespace s6 service names and log files.
-# Must be unique across all [[project]] entries.
-id          = "worker01"
-git_url     = "https://github.com/lxhem03/Afsb"
-branch      = "OAG"
-repo        = "private"
+id             = "worker01"
+git_url        = "https://github.com/lxhem03/Links-Share-Bot"
+branch         = "main"
+repo           = "private"
+
+# Optional per-project token. If omitted, [defaults].access_token is used.
+# access_token = "ghp_xxx"
 
 # Override the global python_version for just this project.
 python_version = "3.12"
@@ -86,20 +88,13 @@ python_version = "3.12"
 run_command    = "main.py"
 logs_size      = "50M"
 
-# Environment variables exported into the worker process.
-# All values are coerced to strings.
 [project.env]
-PORT = "8000"
+PORT = "8080"
 
-# Scheduling rules for this worker. All keys are optional.
 [project.cron]
-# Restart the worker every N hours. 0 or "" disables scheduled restarts.
-restart_on   = "0"
-# When restarting, also wipe & rebuild the venv (fresh `pip install`).
-redeploy     = "false"
-# Auto-start the worker after this many minutes of idle. 0 or "" disables.
-idle         = ""
-# `git pull` before each (re)start. Default: true.
+restart_on   = "0"      # restart every 6 hours
+redeploy     = "false"   # rebuild venv on each restart
+idle         = ""     # auto-start 10 min after going idle
 pull_commits = "true"
 
 
